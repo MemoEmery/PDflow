@@ -5,6 +5,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -27,6 +28,17 @@ ALLOWED = OFFICE | IMAGES | {".txt", ".html", ".htm"}
 MIME_OK = {".jpg": "image/", ".jpeg": "image/", ".png": "image/", ".webp": "image/"}
 
 app = FastAPI(title="PDflow API", version="0.4.0")
+
+# CORS: libera só os sites listados em ALLOWED_ORIGINS (separados por vírgula, sem barra no final)
+origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
+)
+
 limiter = Limiter(key_func=get_remote_address); app.state.limiter = limiter
 pool = ThreadPoolExecutor(max_workers=2)
 queue = None
