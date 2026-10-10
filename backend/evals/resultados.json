@@ -1,0 +1,400 @@
+{
+ "regras": [
+  {
+   "case": "nf_limpa",
+   "mode": "regras",
+   "hard": "fácil",
+   "truth": [
+    1,
+    4,
+    5,
+    6,
+    8,
+    12,
+    13,
+    14
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "keyword",
+    "start_keywords": [
+     "DANFE",
+     "NOTA FISCAL ELETRÔNICA"
+    ],
+    "start_regexes": [],
+    "keyword_location": "header",
+    "identifier": {
+     "type": "invoice_number",
+     "regex": null,
+     "label": null,
+     "location": "page_start"
+    },
+    "combine": "any",
+    "document_type": null,
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    4,
+    5,
+    6,
+    8,
+    12,
+    13,
+    14
+   ],
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "exact": true,
+   "alerta": false,
+   "n_avisos": 0,
+   "seconds": 0.01
+  },
+  {
+   "case": "nf_citada_em_todas",
+   "mode": "regras",
+   "hard": "a palavra aparece em todas as páginas",
+   "truth": [
+    1,
+    3,
+    6,
+    8,
+    9,
+    10,
+    12,
+    16
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "keyword",
+    "start_keywords": [
+     "NOTA FISCAL",
+     "DANFE"
+    ],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "none",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": "nota_fiscal",
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+   ],
+   "precision": 0.412,
+   "recall": 1.0,
+   "f1": 0.583,
+   "exact": false,
+   "alerta": true,
+   "n_avisos": 22,
+   "seconds": 0.01
+  },
+  {
+   "case": "nf_titulo_com_erro_de_ocr",
+   "mode": "regras",
+   "hard": "título ilegível em 1/3 dos inícios",
+   "truth": [
+    1,
+    3,
+    6,
+    10,
+    14,
+    18,
+    21,
+    25,
+    28
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "keyword",
+    "start_keywords": [
+     "NOTA FISCAL ELETRÔNICA"
+    ],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "invoice_number",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": null,
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    3,
+    10,
+    14,
+    21,
+    25
+   ],
+   "precision": 1.0,
+   "recall": 0.625,
+   "f1": 0.769,
+   "exact": false,
+   "alerta": true,
+   "n_avisos": 3,
+   "seconds": 0.01
+  },
+  {
+   "case": "contratos_com_anexos",
+   "mode": "regras",
+   "hard": "'contrato' aparece no corpo e nos anexos",
+   "truth": [
+    1,
+    6,
+    8,
+    11,
+    16,
+    21
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "keyword",
+    "start_keywords": [
+     "CONTRATO"
+    ],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "none",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": "contrato",
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+   ],
+   "precision": 0.217,
+   "recall": 1.0,
+   "f1": 0.357,
+   "exact": false,
+   "alerta": true,
+   "n_avisos": 38,
+   "seconds": 0.01
+  },
+  {
+   "case": "clientes_por_nome",
+   "mode": "regras",
+   "hard": "outros nomes citados no corpo",
+   "truth": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    15
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "identifier",
+    "start_keywords": [],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "customer_name",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": null,
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    15
+   ],
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "exact": true,
+   "alerta": true,
+   "n_avisos": 0,
+   "seconds": 0.0
+  },
+  {
+   "case": "processos_cnj",
+   "mode": "regras",
+   "hard": "outro número citado no corpo",
+   "truth": [
+    1,
+    5,
+    8,
+    11,
+    13,
+    15,
+    19
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "identifier",
+    "start_keywords": [],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "process",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": null,
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    5,
+    8,
+    11,
+    13,
+    15,
+    19
+   ],
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "exact": true,
+   "alerta": true,
+   "n_avisos": 0,
+   "seconds": 0.0
+  },
+  {
+   "case": "recibos_e_relatorios",
+   "mode": "regras",
+   "hard": "dois tipos de documento misturados",
+   "truth": [
+    1,
+    2,
+    5,
+    6,
+    8,
+    9,
+    13,
+    14
+   ],
+   "interpret": "ok",
+   "source": "heuristic",
+   "params": {
+    "strategy": "keyword",
+    "start_keywords": [
+     "RECIBO",
+     "RELATÓRIO"
+    ],
+    "start_regexes": [],
+    "keyword_location": "anywhere",
+    "identifier": {
+     "type": "none",
+     "regex": null,
+     "label": null,
+     "location": "anywhere"
+    },
+    "combine": "any",
+    "document_type": null,
+    "min_document_pages": 1,
+    "allow_single_page_documents": true,
+    "confidence_threshold": 0.85,
+    "name_template": "{identifier}"
+   },
+   "starts": [
+    1,
+    2,
+    5,
+    6,
+    8,
+    9,
+    13,
+    14
+   ],
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "exact": true,
+   "alerta": false,
+   "n_avisos": 0,
+   "seconds": 0.0
+  }
+ ]
+}

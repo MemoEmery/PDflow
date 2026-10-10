@@ -1,0 +1,25 @@
+x-app: &app
+  build: .
+  environment:
+    REDIS_URL: redis://redis:6379/0
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}   # opcional: ativa a IA em Separar PDF (Claude)
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}         # opcional: alternativa com Google AI Studio (Gemini)
+    SPLIT_AI_PROVIDER: ${SPLIT_AI_PROVIDER:-}   # anthropic | google (vazio = usa a chave que existir)
+    SPLIT_AI_MODEL: ${SPLIT_AI_MODEL:-}         # opcional: troca o modelo padrão
+    SPLIT_AI_MODEL: ${SPLIT_AI_MODEL:-claude-haiku-4-5-20251001}
+  volumes: [storage:/app/storage]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  depends_on: [redis]
+
+services:
+  redis:
+    image: redis:7-alpine
+  api:
+    <<: *app
+    ports: ["8000:8000"]
+  worker:
+    <<: *app
+    command: ["rq", "worker", "--url", "redis://redis:6379/0"]
+    mem_limit: 2g
+volumes: {storage: {}}
