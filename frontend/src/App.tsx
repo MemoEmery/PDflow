@@ -1,5 +1,5 @@
 import { API } from "./api";
-import { useMemo, useState, DragEvent } from "react";
+import { useEffect, useMemo, useState, DragEvent } from "react";
 import { Link, NavLink, Navigate, Route, Routes, useParams } from "react-router-dom";
 import SplitAI from "./SplitAI";
 import { FROM_PDF, ORGANIZE, POPULAR, SOON, TOOLS, Tool } from "./tools";
@@ -7,6 +7,7 @@ import { FROM_PDF, ORGANIZE, POPULAR, SOON, TOOLS, Tool } from "./tools";
 const fmt = (b: number) => (b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.ceil(b / 1024) + " KB");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const GENERIC = "Não foi possível converter o arquivo. Tente novamente.";
+const NET = "Não consegui falar com o servidor. Ele pode estar iniciando (aguarde cerca de 1 minuto e tente de novo) ou o endereço deste site não está autorizado no servidor.";
 class AppErr extends Error {} // só mensagens nossas chegam à tela; o resto vira GENERIC
 
 const badge = (t: Tool) => (t.cat === "Converter para PDF" ? t.accept[0].slice(1).toUpperCase() : "PDF");
@@ -90,7 +91,7 @@ function Converter({ t }: { t: Tool }) {
         setSt({ s: "busy", msg: p.status === "pending" ? "Na fila…" : "Convertendo…" });
         await sleep(1000);
       }
-    } catch (e) { setSt({ s: "fail", msg: e instanceof AppErr ? e.message : GENERIC }); }
+    } catch (e) { setSt({ s: "fail", msg: e instanceof AppErr ? e.message : e instanceof TypeError ? NET : GENERIC }); }
   }
 
   function add(fl: File[]) {
@@ -147,10 +148,28 @@ function ToolPage() {
   return t ? <Converter key={t.slug} t={t} /> : <Navigate to="/tools" replace />;
 }
 
+/** Avisa na tela quando o servidor não responde, e já o "acorda" (planos gratuitos dormem por inatividade). */
+function ServerStatus() {
+  const [st, setSt] = useState<"check" | "ok" | "wait" | "fail" | "nocfg">("check");
+  useEffect(() => {
+    if (!API && location.hostname.endsWith(".vercel.app")) { setSt("nocfg"); return; }
+    let alive = true;
+    const t = setTimeout(() => alive && setSt((s) => (s === "check" ? "wait" : s)), 3000);
+    fetch(API + "/api/health").then((r) => alive && setSt(r.ok ? "ok" : "fail")).catch(() => alive && setSt("fail"));
+    return () => { alive = false; clearTimeout(t); };
+  }, []);
+  if (st === "ok" || st === "check") return null;
+  const msg = st === "wait" ? "Iniciando o servidor… isso pode levar cerca de 1 minuto na primeira visita."
+    : st === "nocfg" ? "Este site ainda não sabe o endereço do servidor (variável VITE_API_URL ausente neste deploy)."
+    : "Não foi possível alcançar o servidor. Aguarde um minuto e recarregue; se continuar, o endereço deste site pode não estar autorizado no servidor.";
+  return <div className="srv" role="status">{msg}{st !== "wait" && <small>Endereço deste site: {location.origin}</small>}</div>;
+}
+
 export default function App() {
   return (<>
     <header><Link to="/" className="logo"><i aria-hidden="true" />PDflow</Link>
       <nav><NavLink to="/tools" className="btn ghost sm">Ferramentas</NavLink><Link to="/word-to-pdf" className="btn sm">Começar</Link></nav></header>
+    <ServerStatus />
     <Routes><Route path="/" element={<Home />} /><Route path="/tools" element={<Tools />} /><Route path="/:slug" element={<ToolPage />} /></Routes>
     <footer>© PDflow · Seus arquivos são processados com segurança</footer>
   </>);
