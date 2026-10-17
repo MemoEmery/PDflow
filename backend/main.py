@@ -118,9 +118,10 @@ def cleaner():  # roda na API; funciona igual com Redis ou memória
 threading.Thread(target=cleaner, daemon=True).start()
 
 _origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
-if _origins:  # site em outro endereço (ex.: Vercel). Vazio = só mesmo endereço, sem CORS.
+_origin_rx = os.getenv("ALLOWED_ORIGIN_REGEX", "").strip() or None   # ex.: https://p-dflow-wrf6.*\.vercel\.app
+if _origins or _origin_rx:  # site em outro endereço (ex.: Vercel). Vazio = só mesmo endereço, sem CORS.
     from fastapi.middleware.cors import CORSMiddleware
-    app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["GET", "POST", "DELETE"], allow_headers=["*"],
+    app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_origin_regex=_origin_rx, allow_methods=["GET", "POST", "DELETE"], allow_headers=["*"],
                        expose_headers=["Content-Disposition"], allow_credentials=False, max_age=600)
 
 @app.get("/api/health", include_in_schema=False)
