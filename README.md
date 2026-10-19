@@ -1,65 +1,104 @@
-# PDflow (MVP)
+# PDflow
 
-Upload → conversão real no backend → PDF → download.
+Ferramentas online para trabalhar com PDF: converter, organizar e separar documentos direto pelo navegador, sem cadastro.
 
-## Design
-Interface baseada no style reference Dimension (tema escuro): fundo `#0a0a0a`, painéis de vidro fosco (`rgba(212,212,212,.1)`), botões em pílula (branca para a ação principal, fantasma com filete `#e5e5e5`), navegação flutuante, gradiente âmbar→cobalto apenas no hero e lavagem violeta só como divisor. Fontes: DM Sans (texto e título principal, peso 500) e Geist (títulos de seção), empacotadas via `@fontsource`. Os tokens estão no topo de `frontend/src/styles.css`. A versão clara anterior (Coda + Dropbox) foi guardada em `frontend/src/styles.coda-dropbox.css`; para voltar, copie-a por cima de `styles.css` e restaure as fontes em `main.tsx`.
+## O que ele faz
 
-## Deploy
-Veja `DEPLOY.md` (site na Vercel + servidor em contêiner; o servidor não roda em funções da Vercel).
+**Converter para PDF**
+- Word, Excel, PowerPoint, ODT, ODS, ODP, CSV, TXT e HTML
+- Imagens (JPG, PNG, WEBP), com várias imagens em um único PDF e opções de página (tamanho, orientação, margem)
 
-## Estrutura
-`backend/` FastAPI + serviços (`services/converters.py`, `services/pdf_tools.py`); `frontend/` React + TypeScript + Vite (registro de ferramentas em `src/tools.ts`).
+**Organizar PDF**
+- Juntar, dividir, compactar, extrair, remover e reordenar páginas
+- Girar, numerar páginas, adicionar marca d'água, proteger e desbloquear com senha
 
-## Rodar
-    docker compose up --build
-O Dockerfile compila o frontend e o serve pelo FastAPI. Abra http://localhost:8000 (API/Swagger: http://localhost:8000/docs)
+**Converter de PDF**
+- PDF para Word, Excel, PowerPoint, TXT, JPG e PNG
 
-## Desenvolvimento local
-Backend: `cd backend && pip install -r requirements.txt && uvicorn main:app --reload` (precisa de LibreOffice).
-Frontend: `cd frontend && npm install && npm run dev` (proxy de /api para :8000).
+**Separar PDF com IA**
+Divide um PDF que reúne vários documentos (por exemplo, contratos ou notas fiscais) em arquivos separados, a partir de uma instrução em linguagem natural.
+- Mostra uma prévia da divisão antes de gerar qualquer arquivo, com o motivo e o nível de confiança de cada limite
+- Permite revisar, unir e dividir manualmente
+- Confere o resultado depois de gerar e apresenta um relatório
+- A IA é **opcional**: sem ela, o separador funciona só com regras
 
-## Local sem Docker (legado)
-Instale LibreOffice e `pip install -r backend/requirements.txt`, depois `cd backend && uvicorn main:app --reload`.
+## Privacidade
 
-## Conversões do MVP
-Word/Excel/PowerPoint/ODF/CSV (LibreOffice headless), JPG/PNG/WEBP (Pillow, várias imagens → um PDF), TXT (ReportLab), HTML (WeasyPrint, sem acesso a recursos externos).
+- O uso não exige cadastro nem conta.
+- Os arquivos são processados no servidor e guardados apenas pelo tempo necessário. Resultados e originais são apagados automaticamente em pouco tempo, e o usuário pode excluí-los antes.
+- Os arquivos não são usados para treinar modelos.
+- Com a IA ativada pelo administrador do servidor, trechos curtos do texto de algumas páginas podem ser enviados ao provedor de IA configurado. Sem a IA ativada, nada é enviado a terceiros.
 
-## Fase 2 incluída
-Juntar, dividir (ZIP), compactar, PDF→Word (pdf2docx), PDF→Excel (tabelas via PyMuPDF), PDF→PowerPoint (páginas como imagens), PDF→TXT e PDF→JPG/PNG (ZIP, 150 dpi). Limite de 200 páginas; PDFs com senha são recusados.
+Antes de usar com dados pessoais ou sensíveis, o responsável pela instalação deve revisar essas regras e a legislação aplicável (por exemplo, a LGPD).
 
-## Fase 3 (parcial)
-Girar, marca d'água, numerar páginas, proteger (AES-256) e desbloquear. As opções (texto, senha, ângulo) vão no campo `options` (JSON) de `POST /api/convert`.
+## Tecnologias
 
-## Páginas e imagens
-Extrair, remover e reordenar páginas (campo `pages`, ex.: `1-3,5,8-`) e opções de Imagem→PDF (tamanho, orientação, margem).
+- **Interface:** React, TypeScript e Vite
+- **Servidor:** Python e FastAPI
+- **Processamento:** PyMuPDF, LibreOffice, Pillow, ReportLab, WeasyPrint e Tesseract (OCR)
+
+## Como rodar localmente
+
+Com Docker:
+
+```bash
+docker compose up --build
+```
+
+Abra `http://localhost:8000`. A documentação da API fica em `/docs`.
+
+Para desenvolvimento, em dois terminais:
+
+```bash
+# servidor (precisa do LibreOffice instalado para as conversões de Office)
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+# interface
+cd frontend
+npm install
+npm run dev
+```
 
 ## Testes
-- Backend: `cd backend && pip install pytest httpx && pytest -q`
-- Interface (13 testes, exigem a API rodando em localhost:8000 e um PDF de exemplo em /tmp/fx.pdf): `cd frontend && npm install && npm test`
 
-## Separar PDF com IA (em construção, por fases)
-Módulo `backend/pdf_splitter/`, desacoplado das demais ferramentas.
-- **Fase 1 (pronta):** extração de texto, detecção de páginas escaneadas, interface de OCR (Tesseract), motor de regras e interpretação da instrução em parâmetros validados (`text.py`, `rules.py`, `parser.py`, `llm.py`).
-- **Fase 2:** detecção dos limites, camadas de validação cruzada, score de confiança, validação dos critérios e simulação.
-- **Fase 3:** API, separação real, validação pós-separação (hash de páginas), integridade, autocorreção e relatório.
-- **Fase 4:** interface (upload, instrução, prévia editável, revisão humana, relatório, downloads).
-- **Fase 5:** Tesseract no Docker, teste de ponta a ponta e documentação.
+```bash
+# servidor
+cd backend && pip install pytest && pytest -q
 
-## Fila
-Com `REDIS_URL` definido, a API enfileira no Redis (RQ) e o container `worker` processa; sem ele, roda em thread (dev local). Timeout de 180 s por tarefa. Não há contas: o uso é anônimo e os resultados são apagados em 30 min (ajuste `TTL` em `main.py` e o texto de privacidade juntos).
+# interface (com o servidor rodando em localhost:8000)
+cd frontend && npm test
+```
 
-## Segurança implementada
-Whitelist de extensão + verificação de MIME para imagens, limite de 25 MB e 20 arquivos, nomes sanitizados, pasta isolada por job (UUID), originais apagados após o processamento, PDFs apagados em 30 min, rate limit (20/min por IP), timeout de 90 s no LibreOffice, container sem root, erros genéricos ao usuário.
+## Configuração
 
-## Ainda não implementado
-assinatura, OCR, PDF→Excel/PowerPoint, planos/preços. Antes de produção: storage S3 compartilhado se a API e os workers ficarem em máquinas diferentes, antivírus nos uploads.
+O projeto funciona sem nenhuma configuração. Opções avançadas são definidas por variáveis de ambiente no servidor:
 
-## IA no "Separar PDF com IA" (opcional)
-Sem chave, o separador usa só regras. Para ativar a IA, defina **uma** das chaves (o servidor, não o usuário, decide):
-- `ANTHROPIC_API_KEY` (Claude, modelo padrão `claude-haiku-4-5-20251001`)
-- `GEMINI_API_KEY` ou `GOOGLE_API_KEY` (Google AI Studio, modelo padrão `gemini-2.5-flash`)
+- Origens permitidas, quando o site e o servidor ficam em endereços diferentes
+- Chave de um provedor de IA, para ativar a IA no "Separar PDF com IA"
+- URL de um Redis, para executar o processamento em vários processos
 
-Com as duas definidas, `SPLIT_AI_PROVIDER=anthropic|google` escolhe; `SPLIT_AI_MODEL` troca o modelo. Confira nomes de modelos e preços na tabela atual do provedor.
-Medir acerto e custo: `cd backend && python -m evals.run_eval` (veja o cabeçalho do arquivo).
-**Privacidade:** com a IA ativa, trechos curtos do texto de algumas páginas saem do servidor. Em planos gratuitos, alguns provedores podem usar o conteúdo enviado para melhorar produtos; para documentos reais, confira os termos e prefira plano pago.
+Nunca grave chaves ou senhas no repositório. Use as variáveis de ambiente do seu provedor de hospedagem.
+
+## Publicação
+
+Veja [DEPLOY.md](DEPLOY.md). O site pode ficar em uma plataforma de sites estáticos, mas o servidor precisa de um serviço que execute contêineres Docker.
+
+## Estrutura
+
+```text
+backend/     servidor, ferramentas de PDF e módulo de separação
+frontend/    interface web
+Dockerfile   imagem do servidor (inclui a interface compilada)
+```
+
+## Limitações
+
+- Este é um projeto em evolução. Revise a segurança e a privacidade antes de abri-lo ao público.
+- Não há verificação de vírus nos arquivos enviados.
+- O resultado das conversões depende da complexidade do documento original, principalmente em PDF para Word.
+
+## Licença
+
+A definir.
